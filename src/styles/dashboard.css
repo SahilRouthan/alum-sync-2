@@ -1,0 +1,57 @@
+@tailwind components;
+@tailwind utilities;
+
+/* Scoped base reset strictly for the authenticated app & auth pages (#alumsync-app)
+   Leaves the landing page (src/index.css) 100% untouched */
+#alumsync-app {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#alumsync-app *,
+#alumsync-app *::before,
+#alumsync-app *::after {
+  box-sizing: border-box;
+  border-style: solid;
+  border-width: 0;
+  border-color: #e2e8f0;
+}
+
+#alumsync-app h1,
+#alumsync-app h2,
+#alumsync-app h3,
+#alumsync-app h4 {
+  font-family: "Sora", "Plus Jakarta Sans", sans-serif;
+  color: inherit;
+  margin: 0;
+  font-size: inherit;
+}
+
+#alumsync-app p {
+  font-size: inherit;
+  margin: 0;
+}
+
+#alumsync-app nav {
+  position: static;
+  height: auto;
+  background: transparent;
+  border-bottom: none;
+  padding: 0;
+  cursor: default;
+}
+
+#alumsync-app button,
+#alumsync-app input,
+#alumsync-app select,
+#alumsync-app textarea {
+  font-family: inherit;
+}
+
+#alumsync-app button {
+  cursor: pointer;
+}

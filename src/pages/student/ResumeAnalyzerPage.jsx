@@ -162,16 +162,16 @@ export default function ResumeAnalyzerPage() {
       {/* Upload Box */}
       <form
         onSubmit={handleUpload}
-        className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4"
+        className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm space-y-4"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 min-w-0">
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Upload Resume (PDF, max 10MB — OCR enabled for scanned PDFs)
             </label>
-            <label className="flex items-center justify-center gap-3 px-4 py-6 rounded-xl border-2 border-dashed border-slate-300 hover:border-brand-500 cursor-pointer bg-slate-50/70">
-              <UploadCloud className="w-6 h-6 text-brand-600" />
-              <span className="text-sm text-slate-700 font-medium">
+            <label className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 px-4 py-6 rounded-xl border-2 border-dashed border-slate-300 hover:border-brand-500 cursor-pointer bg-slate-50/70">
+              <UploadCloud className="w-6 h-6 text-brand-600 shrink-0" />
+              <span className="text-sm text-slate-700 font-medium text-center break-all">
                 {selectedFile ? `${selectedFile.name} (${(selectedFile.size / 1024).toFixed(0)} KB)` : "Click to select a PDF resume"}
               </span>
               <input
@@ -218,7 +218,7 @@ export default function ResumeAnalyzerPage() {
           {resumes.map((r) => (
             <div
               key={r.id}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-semibold max-w-full ${
                 selectedResume?.id === r.id
                   ? "bg-brand-600 text-white border-brand-600"
                   : "bg-white text-slate-700 border-slate-200"
@@ -227,10 +227,10 @@ export default function ResumeAnalyzerPage() {
               <button
                 type="button"
                 onClick={() => selectResumeDetail(r.id)}
-                className="inline-flex items-center gap-1.5 text-current"
+                className="inline-flex items-center gap-1.5 text-current min-w-0"
               >
-                <FileText className="w-3.5 h-3.5" />
-                <span>{r.file_name}</span>
+                <FileText className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate max-w-[180px] sm:max-w-xs">{r.file_name}</span>
               </button>
               <button
                 type="button"

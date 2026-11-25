@@ -99,9 +99,9 @@ export default function StudentDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Recommended Alumni */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div className="min-w-0">
               <h2 className="text-lg font-bold text-slate-900">Top Recommended Mentors</h2>
               <p className="text-xs text-slate-500">
                 Ranked by weighted similarity across skills, industry, role, education, and experience.
@@ -109,7 +109,7 @@ export default function StudentDashboard() {
             </div>
             <Link
               to="/student/recommendations"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 no-underline"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 no-underline shrink-0"
             >
               View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>

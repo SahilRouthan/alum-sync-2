@@ -36,12 +36,12 @@ export function Avatar({ name = "User", src, size = "md" }) {
 
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+      <div className="min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>
         {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2.5">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5 shrink-0">{actions}</div>}
     </div>
   );
 }
@@ -56,12 +56,12 @@ export function StatCard({ title, value, subtitle, icon: Icon, accent = "brand" 
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow min-w-0">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>
-          <p className="text-2xl font-bold text-slate-900 mt-2">{value}</p>
-          {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 truncate">{value}</p>
+          {subtitle && <p className="text-xs text-slate-500 mt-1 truncate">{subtitle}</p>}
         </div>
         {Icon && (
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${accents[accent] || accents.brand}`}>
@@ -147,10 +147,10 @@ export function ErrorBanner({ message, onRetry }) {
 export function Modal({ open, onClose, title, children, maxWidth = "max-w-lg" }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className={`bg-white rounded-2xl border border-slate-200 shadow-2xl w-full ${maxWidth} max-h-[90vh] flex flex-col`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900">{title}</h3>
           <button
             type="button"
             onClick={onClose}
@@ -159,7 +159,7 @@ export function Modal({ open, onClose, title, children, maxWidth = "max-w-lg" })
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto">{children}</div>
+        <div className="p-4 sm:p-6 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

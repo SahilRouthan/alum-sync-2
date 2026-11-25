@@ -126,15 +126,15 @@ export default function DashboardLayout({ children }) {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-[1px] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-slate-950 text-slate-100 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] sm:w-64 shrink-0 bg-slate-950 text-slate-100 flex flex-col transition-transform duration-200 ease-out lg:static lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between px-5 h-16 border-b border-slate-800">
@@ -148,8 +148,9 @@ export default function DashboardLayout({ children }) {
           </Link>
           <button
             type="button"
+            aria-label="Close navigation menu"
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-slate-400 hover:text-white p-1"
+            className="lg:hidden text-slate-400 hover:text-white hover:bg-slate-800 p-2 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -188,17 +189,17 @@ export default function DashboardLayout({ children }) {
         <div className="p-3 border-t border-slate-800 space-y-1">
           <Link
             to="/"
-            className="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/70 no-underline"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-slate-800/70 transition-colors no-underline"
           >
-            <Home className="w-4 h-4" />
+            <Home className="w-4 h-4 shrink-0" />
             <span>Landing Home</span>
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-rose-400 hover:text-rose-300 hover:bg-rose-950/40"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-200 hover:bg-rose-500/15 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span>Sign Out</span>
           </button>
         </div>
@@ -206,23 +207,28 @@ export default function DashboardLayout({ children }) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 h-16 bg-white/90 backdrop-blur border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
+              aria-label="Open navigation menu"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-200/80 shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="text-sm font-medium text-slate-500 hidden sm:inline">
+            <span className="sm:hidden font-display font-bold text-base text-slate-900 truncate">
+              Alum<span className="text-brand-600">Sync</span>
+            </span>
+            <span className="text-sm font-medium text-slate-500 hidden sm:inline truncate">
               Welcome back, <strong className="text-slate-900">{profile?.full_name}</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-3 relative">
+          <div className="flex items-center gap-2 sm:gap-3 relative shrink-0">
             <button
               type="button"
+              aria-label="Notifications"
               onClick={() => setNotifOpen((prev) => !prev)}
               className="relative p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
             >
@@ -235,7 +241,7 @@ export default function DashboardLayout({ children }) {
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden">
+              <div className="absolute right-0 top-12 w-[calc(100vw-1.5rem)] max-w-sm sm:w-80 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                   <span className="text-sm font-bold text-slate-900">Notifications</span>
                   {unreadCount > 0 && (

@@ -32,7 +32,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div id="alumsync-app" className="min-h-screen bg-slate-950 flex flex-col justify-center px-4 py-12">
+    <div id="alumsync-app" className="alumsync-app">
+      <div className="min-h-screen bg-slate-950 flex flex-col justify-center px-4 py-12">
       <div className="max-w-md w-full mx-auto">
         <Link
           to="/"
@@ -115,6 +116,7 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

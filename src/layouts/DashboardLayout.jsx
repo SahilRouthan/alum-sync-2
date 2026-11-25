@@ -121,7 +121,8 @@ export default function DashboardLayout({ children }) {
     profile?.role === "admin" ? "Administrator" : profile?.role === "alumni" ? "Alumni" : "Student";
 
   return (
-    <div id="alumsync-app" className="flex min-h-screen bg-slate-50 text-slate-900">
+    <div id="alumsync-app" className="alumsync-app">
+      <div className="flex min-h-screen bg-slate-50 text-slate-900">
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
@@ -132,7 +133,7 @@ export default function DashboardLayout({ children }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-100 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-slate-950 text-slate-100 flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -282,6 +283,7 @@ export default function DashboardLayout({ children }) {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">{children}</main>
+      </div>
       </div>
     </div>
   );

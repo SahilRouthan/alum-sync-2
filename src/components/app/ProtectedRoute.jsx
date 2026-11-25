@@ -14,8 +14,10 @@ export default function ProtectedRoute({ allowedRoles, children }) {
 
   if (loading) {
     return (
-      <div id="alumsync-app" className="flex items-center justify-center min-h-screen bg-slate-50">
-        <LoadingSpinner label="Verifying your session..." />
+      <div id="alumsync-app" className="alumsync-app">
+        <div className="flex items-center justify-center min-h-screen bg-slate-50">
+          <LoadingSpinner label="Verifying your session..." />
+        </div>
       </div>
     );
   }

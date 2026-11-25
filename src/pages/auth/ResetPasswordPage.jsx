@@ -39,7 +39,8 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div id="alumsync-app" className="min-h-screen bg-slate-950 flex flex-col justify-center px-4 py-12">
+    <div id="alumsync-app" className="alumsync-app">
+      <div className="min-h-screen bg-slate-950 flex flex-col justify-center px-4 py-12">
       <div className="max-w-md w-full mx-auto bg-white rounded-2xl p-8 shadow-2xl border border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900">Set new password</h1>
         <p className="text-sm text-slate-500 mt-1 mb-6">Enter your new password below.</p>
@@ -92,6 +93,7 @@ export default function ResetPasswordPage() {
             Return to login
           </Link>
         </p>
+      </div>
       </div>
     </div>
   );

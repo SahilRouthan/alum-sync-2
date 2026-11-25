@@ -1,8 +1,12 @@
-import pdfParse from "pdf-parse";
-import Tesseract from "tesseract.js";
+import os from "node:os";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-import { createCanvas } from "@napi-rs/canvas";
+import * as pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.mjs";
 import { normalizeSkillName } from "../utils/normalize.js";
+
+// Bind pdf.js worker in-memory so serverless runtimes (e.g. Vercel) never fail resolving worker files on disk.
+if (!globalThis.pdfjsWorker) {
+  globalThis.pdfjsWorker = pdfjsWorker;
+}
 
 const TECHNICAL_SKILLS = [
   "JavaScript", "TypeScript", "Python", "Java", "C++", "C#", "Go", "Rust", "PHP", "Ruby", "Swift", "Kotlin", "Scala", "R",
@@ -25,17 +29,24 @@ const SOFT_SKILLS = [
 const SKILL_PATTERNS = {
   "C++": /(?:^|[\s,;|/()])c\+\+(?=$|[\s,;|/().])/i,
   "C#": /(?:^|[\s,;|/()])c#(?=$|[\s,;|/().])/i,
+  "Go": /\b(?:golang|Go)\b/,
+  "R": /\b(?:RStudio|R(?=\s*[,;|/()]|\s+(?:programming|language|statistical)))\b/,
+  "HTML5": /\bhtml5?\b/i,
+  "CSS3": /\bcss3?\b/i,
+  "React": /\breact(?:\.?js)?\b/i,
   "Next.js": /\bnext(?:\.?js)\b/i,
-  "Node.js": /\bnode(?:\.?js)\b/i,
-  "Express.js": /\bexpress(?:\.?js)\b/i,
-  "Vue.js": /\bvue(?:\.?js)\b/i,
+  "Node.js": /\bnode(?:\.?js)?\b/i,
+  "Express.js": /\bexpress(?:\.?js)?\b/i,
+  "Vue.js": /\bvue(?:\.?js)?\b/i,
   "Tailwind CSS": /\btailwind(?:\s*css)?\b/i,
   "REST APIs": /\brest(?:ful)?\s*apis?\b/i,
   "UI/UX Design": /\bui\s*\/?\s*ux(?:\s*design)?\b/i,
   "CI/CD": /\bci\s*\/?\s*cd\b/i,
-  "Natural Language Processing": /\b(?:natural language processing|nlp)\b/i,
+  "Natural Language Processing": /\b(?:natural\s+language\s+processing|nlp)\b/i,
   "Machine Learning": /\bmachine\s+learning\b/i,
   "Deep Learning": /\bdeep\s+learning\b/i,
+  "Scikit-Learn": /\b(?:scikit[-\s]?learn|sklearn)\b/i,
+  "AWS": /\b(?:aws|amazon\s+web\s+services)\b/i,
   "Google Cloud": /\b(?:google\s+cloud|gcp)\b/i,
   "PostgreSQL": /\b(?:postgresql|postgres)\b/i,
   "MongoDB": /\bmongo(?:db)?\b/i,
@@ -93,45 +104,155 @@ export function validatePdfBuffer(buffer, mimeType, originalName) {
   }
 }
 
-async function runOcrFallback(buffer) {
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
-  const pdfDoc = await loadingTask.promise;
-  const maxPages = Math.min(pdfDoc.numPages, 3);
-  const pageTexts = [];
+function reconstructPageLines(textContent) {
+  const lines = [];
+  let currentLine = "";
+  let lastY = null;
 
-  for (let pageNum = 1; pageNum <= maxPages; pageNum += 1) {
-    const page = await pdfDoc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 2.0 });
-    const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-    const context = canvas.getContext("2d");
+  for (const item of textContent.items || []) {
+    const str = typeof item.str === "string" ? item.str : "";
+    const y = Array.isArray(item.transform) ? item.transform[5] : null;
 
-    await page.render({ canvasContext: context, viewport }).promise;
-    const pngBuffer = canvas.toBuffer("image/png");
+    if (lastY !== null && y !== null && Math.abs(y - lastY) > 3) {
+      if (currentLine.trim()) lines.push(currentLine.trim());
+      currentLine = str;
+    } else {
+      if (currentLine && str && !currentLine.endsWith(" ") && !str.startsWith(" ")) {
+        currentLine += " ";
+      }
+      currentLine += str;
+    }
 
-    const { data } = await Tesseract.recognize(pngBuffer, "eng");
-    if (data?.text) {
-      pageTexts.push(data.text);
+    if (item.hasEOL) {
+      if (currentLine.trim()) lines.push(currentLine.trim());
+      currentLine = "";
+      lastY = null;
+    } else if (y !== null) {
+      lastY = y;
     }
   }
 
-  return pageTexts.join("\n").trim();
+  if (currentLine.trim()) {
+    lines.push(currentLine.trim());
+  }
+
+  return lines.join("\n");
+}
+
+async function extractWithPdfJs(buffer) {
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    disableFontFace: true,
+    verbosity: 0,
+  });
+  const pdfDoc = await loadingTask.promise;
+  try {
+    const pageTexts = [];
+    const maxPages = Math.min(pdfDoc.numPages, 15);
+    for (let pageNum = 1; pageNum <= maxPages; pageNum += 1) {
+      const page = await pdfDoc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = reconstructPageLines(textContent);
+      if (pageText) pageTexts.push(pageText);
+    }
+    return pageTexts.join("\n").trim();
+  } finally {
+    await pdfDoc.destroy?.();
+  }
+}
+
+async function extractWithPdfParse(buffer) {
+  const { default: pdfParse } = await import("pdf-parse");
+  const parsed = await pdfParse(buffer);
+  return (parsed?.text || "").trim();
+}
+
+function withTimeout(promise, ms, message) {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
+}
+
+async function runOcrFallback(buffer) {
+  const [{ createCanvas }, { createWorker }] = await Promise.all([
+    import("@napi-rs/canvas"),
+    import("tesseract.js"),
+  ]);
+
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    disableFontFace: true,
+    verbosity: 0,
+  });
+  const pdfDoc = await loadingTask.promise;
+  const worker = await createWorker("eng", 1, {
+    cachePath: os.tmpdir(),
+    logger: () => {},
+  });
+
+  try {
+    const maxPages = Math.min(pdfDoc.numPages, 2);
+    const pageTexts = [];
+
+    for (let pageNum = 1; pageNum <= maxPages; pageNum += 1) {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+      const context = canvas.getContext("2d");
+
+      await page.render({ canvasContext: context, viewport }).promise;
+      const pngBuffer = canvas.toBuffer("image/png");
+
+      const { data } = await worker.recognize(pngBuffer);
+      if (data?.text) {
+        pageTexts.push(data.text);
+      }
+    }
+
+    return pageTexts.join("\n").trim();
+  } finally {
+    await worker.terminate().catch(() => {});
+    await pdfDoc.destroy?.();
+  }
 }
 
 export async function extractTextFromPdf(buffer) {
   let text = "";
-  let method = "pdf-parse";
+  let method = "pdfjs";
 
   try {
-    const parsed = await pdfParse(buffer);
-    text = (parsed?.text || "").trim();
+    text = await extractWithPdfJs(buffer);
   } catch {
     text = "";
   }
 
-  const meaningfulLength = text.replace(/\s+/g, "").length;
+  let meaningfulLength = text.replace(/\s+/g, "").length;
   if (meaningfulLength < 80) {
     try {
-      const ocrText = await runOcrFallback(buffer);
+      const parsedText = await extractWithPdfParse(buffer);
+      if (parsedText.replace(/\s+/g, "").length > meaningfulLength) {
+        text = parsedText;
+        method = "pdf-parse";
+        meaningfulLength = text.replace(/\s+/g, "").length;
+      }
+    } catch {
+      // continue to OCR fallback if still insufficient text
+    }
+  }
+
+  if (meaningfulLength < 80) {
+    try {
+      const ocrText = await withTimeout(
+        runOcrFallback(buffer),
+        15000,
+        "OCR timed out while reading a scanned PDF. Please upload a text-based PDF."
+      );
       if (ocrText.replace(/\s+/g, "").length > meaningfulLength) {
         text = ocrText;
         method = "tesseract-ocr";

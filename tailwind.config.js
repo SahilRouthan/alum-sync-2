@@ -1,10 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  important: "#alumsync-app",
+  important: ".alumsync-app",
   content: [
     "./src/pages/**/*.{js,jsx}",
     "./src/layouts/**/*.{js,jsx}",
     "./src/components/app/**/*.{js,jsx}",
+    "./src/context/**/*.{js,jsx}",
   ],
   corePlugins: {
     preflight: false,

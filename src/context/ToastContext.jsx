@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import "../styles/dashboard.css";
 
 const ToastContext = createContext(null);
 
@@ -22,35 +23,37 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4">
-        {toasts.map((toast) => {
-          const styles =
-            toast.type === "success"
-              ? "bg-emerald-950 text-emerald-50 border-emerald-700"
-              : toast.type === "error"
-                ? "bg-rose-950 text-rose-50 border-rose-700"
-                : "bg-slate-900 text-slate-50 border-slate-700";
+      <div className="alumsync-app alumsync-toast-host">
+        <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4">
+          {toasts.map((toast) => {
+            const styles =
+              toast.type === "success"
+                ? "bg-emerald-950 text-emerald-50 border-emerald-700"
+                : toast.type === "error"
+                  ? "bg-rose-950 text-rose-50 border-rose-700"
+                  : "bg-slate-900 text-slate-50 border-slate-700";
 
-          const Icon =
-            toast.type === "success" ? CheckCircle2 : toast.type === "error" ? AlertCircle : Info;
+            const Icon =
+              toast.type === "success" ? CheckCircle2 : toast.type === "error" ? AlertCircle : Info;
 
-          return (
-            <div
-              key={toast.id}
-              className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm ${styles}`}
-            >
-              <Icon className="w-4 h-4 mt-0.5 shrink-0" />
-              <span className="flex-1 leading-snug">{toast.message}</span>
-              <button
-                type="button"
-                onClick={() => removeToast(toast.id)}
-                className="opacity-70 hover:opacity-100 bg-transparent border-0 text-current p-0"
+            return (
+              <div
+                key={toast.id}
+                className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl border shadow-xl text-sm ${styles}`}
               >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          );
-        })}
+                <Icon className="w-4 h-4 mt-0.5 shrink-0" />
+                <span className="flex-1 leading-snug">{toast.message}</span>
+                <button
+                  type="button"
+                  onClick={() => removeToast(toast.id)}
+                  className="opacity-70 hover:opacity-100 bg-transparent border-0 text-current p-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </ToastContext.Provider>
   );

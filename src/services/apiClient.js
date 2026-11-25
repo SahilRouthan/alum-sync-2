@@ -23,16 +23,39 @@ export async function apiRequest(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-    body:
-      !isFormData && options.body !== undefined && typeof options.body !== "string"
-        ? JSON.stringify(options.body)
-        : options.body,
-  });
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs ?? 45000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  const data = await response.json().catch(() => ({}));
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      signal: options.signal || controller.signal,
+      headers,
+      body:
+        !isFormData && options.body !== undefined && typeof options.body !== "string"
+          ? JSON.stringify(options.body)
+          : options.body,
+    });
+  } catch (networkErr) {
+    if (networkErr.name === "AbortError") {
+      throw new Error("Request timed out while waiting for the server. Please try again.");
+    }
+    throw networkErr;
+  } finally {
+    clearTimeout(timer);
+  }
+
+  const rawText = await response.text().catch(() => "");
+  let data = {};
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = {};
+    }
+  }
   if (!response.ok) {
     const err = new Error(data.error || data.message || `Request failed (${response.status})`);
     err.status = response.status;

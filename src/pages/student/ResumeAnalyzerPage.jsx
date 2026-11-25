@@ -94,6 +94,7 @@ export default function ResumeAnalyzerPage() {
     }
 
     setUploading(true);
+    setError("");
     try {
       const fd = new FormData();
       fd.append("resume", selectedFile);
@@ -107,7 +108,9 @@ export default function ResumeAnalyzerPage() {
       const listRes = await api.get("/resumes");
       setResumes(listRes.resumes || []);
     } catch (err) {
-      showToast(err.message, "error");
+      const msg = err.message || "Failed to upload and analyze resume.";
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setUploading(false);
     }

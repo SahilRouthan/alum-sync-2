@@ -69,15 +69,19 @@ router.post("/upload", requireRole("student"), uploadResume.single("resume"), as
     try {
       extracted = await extractTextFromPdf(req.file.buffer);
     } catch (parseErr) {
-      await supabaseAdmin.from("resumes").insert({
-        student_id: studentId,
-        file_name: req.file.originalname,
-        file_path: filePath,
-        file_url: signedData?.signedUrl || null,
-        file_size: req.file.size,
-        mime_type: "application/pdf",
-        parse_status: "failed",
-      });
+      try {
+        await supabaseAdmin.from("resumes").insert({
+          student_id: studentId,
+          file_name: req.file.originalname,
+          file_path: filePath,
+          file_url: signedData?.signedUrl || null,
+          file_size: req.file.size,
+          mime_type: "application/pdf",
+          parse_status: "failed",
+        });
+      } catch {
+        // ignore failed audit row insert
+      }
       return res.status(422).json({ error: parseErr.message });
     }
 

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { supabase } from "../services/supabaseClient";
+import { ensureSupabaseClient, supabase } from "../services/supabaseClient";
 import { api } from "../services/apiClient";
 
 const AuthContext = createContext(null);
@@ -25,14 +25,32 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
+    let subscription;
 
     async function init() {
       try {
-        if (supabase) {
-          const { data } = await supabase.auth.getSession();
-          if (data?.session?.user && active) {
-            setUser(data.session.user);
-            localStorage.setItem("alumsync_access_token", data.session.access_token);
+        const client = await ensureSupabaseClient().catch(() => null);
+        if (client && active) {
+          const { data } = client.auth.onAuthStateChange(async (_event, session) => {
+            if (!active) return;
+            if (session?.user) {
+              setUser(session.user);
+              localStorage.setItem("alumsync_access_token", session.access_token);
+              await loadMe();
+            } else {
+              setUser(null);
+              setProfile(null);
+              setRoleProfile(null);
+              localStorage.removeItem("alumsync_access_token");
+            }
+            setLoading(false);
+          });
+          subscription = data?.subscription;
+
+          const { data: sessionData } = await client.auth.getSession();
+          if (sessionData?.session?.user && active) {
+            setUser(sessionData.session.user);
+            localStorage.setItem("alumsync_access_token", sessionData.session.access_token);
             await loadMe();
           }
         } else {
@@ -48,25 +66,6 @@ export function AuthProvider({ children }) {
     }
 
     init();
-
-    let subscription;
-    if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (!active) return;
-        if (session?.user) {
-          setUser(session.user);
-          localStorage.setItem("alumsync_access_token", session.access_token);
-          await loadMe();
-        } else {
-          setUser(null);
-          setProfile(null);
-          setRoleProfile(null);
-          localStorage.removeItem("alumsync_access_token");
-        }
-        setLoading(false);
-      });
-      subscription = data?.subscription;
-    }
 
     return () => {
       active = false;
@@ -127,16 +126,14 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithOAuth = async (provider, { role } = {}) => {
-    if (!supabase) {
-      throw new Error("Supabase client is not configured for OAuth.");
-    }
+    const client = await ensureSupabaseClient();
     if (role === "student" || role === "alumni") {
       localStorage.setItem("alumsync_pending_oauth_role", role);
     } else {
       localStorage.removeItem("alumsync_pending_oauth_role");
     }
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await client.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -146,10 +143,8 @@ export function AuthProvider({ children }) {
   };
 
   const syncOAuthProfile = useCallback(async () => {
-    if (!supabase) {
-      throw new Error("Supabase client is not configured.");
-    }
-    const { data: sessionData } = await supabase.auth.getSession();
+    const client = await ensureSupabaseClient();
+    const { data: sessionData } = await client.auth.getSession();
     const session = sessionData?.session;
     if (!session?.access_token) {
       throw new Error("No active OAuth session found.");
@@ -170,10 +165,8 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = async (newPassword) => {
-    if (!supabase) {
-      throw new Error("Supabase client is not configured.");
-    }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    const client = await ensureSupabaseClient();
+    const { error } = await client.auth.updateUser({ password: newPassword });
     if (error) throw error;
     return true;
   };

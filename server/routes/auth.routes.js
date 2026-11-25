@@ -1,10 +1,19 @@
 import express from "express";
-import { supabaseAdmin, supabasePublic } from "../config/supabase.js";
+import { publicSupabaseConfig, supabaseAdmin, supabasePublic } from "../config/supabase.js";
 import { requireAuth, requireRole, requireSupabase } from "../middleware/auth.js";
 import { normalizeEmail, normalizePersonName, sanitizeText } from "../utils/normalize.js";
 import { isValidEmail } from "../utils/validation.js";
 
 const router = express.Router();
+
+router.get("/config", (_req, res) => {
+  if (!publicSupabaseConfig) {
+    return res.status(503).json({
+      error: "Supabase public configuration (SUPABASE_URL, SUPABASE_ANON_KEY) is not set on the server.",
+    });
+  }
+  return res.json(publicSupabaseConfig);
+});
 
 router.post("/signup", requireSupabase, async (req, res, next) => {
   try {

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Lock, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { supabase } from "../../services/supabaseClient";
+import { ensureSupabaseClient } from "../../services/supabaseClient";
 import "../../styles/dashboard.css";
 
 export default function ResetPasswordPage() {
@@ -30,10 +30,12 @@ export default function ResetPasswordPage() {
     }
 
     const code = searchParams.get("code");
-    if (code && supabase) {
-      supabase.auth.exchangeCodeForSession(code).catch((err) => {
-        setError(err.message || "Reset link is invalid or expired. Please request a new one.");
-      });
+    if (code) {
+      ensureSupabaseClient()
+        .then((client) => client.auth.exchangeCodeForSession(code))
+        .catch((err) => {
+          setError(err.message || "Reset link is invalid or expired. Please request a new one.");
+        });
     }
   }, []);
 

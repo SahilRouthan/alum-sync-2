@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { supabase } from "../../services/supabaseClient";
+import { ensureSupabaseClient } from "../../services/supabaseClient";
 import { roleHomePath } from "../../components/app/ProtectedRoute";
 import "../../styles/dashboard.css";
 
@@ -30,23 +30,21 @@ export default function OAuthCallbackPage() {
           throw new Error(errDesc.replace(/\+/g, " "));
         }
 
-        if (!supabase) {
-          throw new Error("Supabase client is not configured.");
-        }
+        const client = await ensureSupabaseClient();
 
         const code = searchParams.get("code");
-        const { data: initialSession } = await supabase.auth.getSession();
+        const { data: initialSession } = await client.auth.getSession();
 
         if (!initialSession?.session && code) {
-          const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+          const { error: exchangeErr } = await client.auth.exchangeCodeForSession(code);
           if (exchangeErr) throw exchangeErr;
         }
 
         // Wait briefly for implicit hash session detection if not immediately populated
-        let session = (await supabase.auth.getSession())?.data?.session;
+        let session = (await client.auth.getSession())?.data?.session;
         if (!session) {
           await new Promise((resolve) => setTimeout(resolve, 450));
-          session = (await supabase.auth.getSession())?.data?.session;
+          session = (await client.auth.getSession())?.data?.session;
         }
 
         if (!session) {

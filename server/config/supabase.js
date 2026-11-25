@@ -11,6 +11,14 @@ const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+export const publicSupabaseConfig =
+  supabaseUrl &&
+  supabaseAnonKey &&
+  !supabaseUrl.includes("your-project-id") &&
+  !supabaseAnonKey.includes("your-supabase")
+    ? { supabaseUrl, supabaseAnonKey }
+    : null;
+
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
     supabaseAnonKey &&

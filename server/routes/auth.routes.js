@@ -137,9 +137,40 @@ router.post("/login", requireSupabase, async (req, res, next) => {
   }
 });
 
+function isPreviewVercelHost(urlOrHost = "") {
+  return (
+    /-[a-z0-9]+-[a-z0-9-]+s-projects-[a-z0-9]+\.vercel\.app/i.test(urlOrHost) ||
+    /-[a-z0-9]{9,}-[a-z0-9-]+\.vercel\.app/i.test(urlOrHost)
+  );
+}
+
 function resolveClientOrigin(req) {
-  if (process.env.CLIENT_URL) {
-    return process.env.CLIENT_URL.replace(/\/+$/, "");
+  const configuredClientUrl = process.env.CLIENT_URL?.trim().replace(/\/+$/, "");
+  const prodUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`
+    : null;
+
+  if (process.env.VERCEL) {
+    if (
+      configuredClientUrl &&
+      !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredClientUrl) &&
+      !isPreviewVercelHost(configuredClientUrl)
+    ) {
+      return configuredClientUrl;
+    }
+
+    const originHeader = req.get("origin")?.trim().replace(/\/+$/, "");
+    if (originHeader && !isPreviewVercelHost(originHeader) && !/localhost|127\.0\.0\.1/i.test(originHeader)) {
+      return originHeader;
+    }
+
+    if (prodUrl) {
+      return prodUrl;
+    }
+  }
+
+  if (configuredClientUrl) {
+    return configuredClientUrl;
   }
   const originHeader = req.get("origin");
   if (originHeader) {
@@ -149,8 +180,8 @@ function resolveClientOrigin(req) {
   if (host) {
     return `${req.protocol}://${host}`;
   }
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (prodUrl) {
+    return prodUrl;
   }
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;

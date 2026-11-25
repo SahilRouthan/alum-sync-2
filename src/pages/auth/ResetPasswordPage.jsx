@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Lock, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { supabase } from "../../services/supabaseClient";
 import "../../styles/dashboard.css";
 
 export default function ResetPasswordPage() {
@@ -14,6 +15,27 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const searchParams = new URLSearchParams(window.location.search);
+    const errDesc =
+      hashParams.get("error_description") ||
+      searchParams.get("error_description") ||
+      hashParams.get("error") ||
+      searchParams.get("error");
+    if (errDesc) {
+      setError(errDesc.replace(/\+/g, " "));
+      return;
+    }
+
+    const code = searchParams.get("code");
+    if (code && supabase) {
+      supabase.auth.exchangeCodeForSession(code).catch((err) => {
+        setError(err.message || "Reset link is invalid or expired. Please request a new one.");
+      });
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

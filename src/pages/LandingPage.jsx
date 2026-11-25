@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Stats from "../components/Stats";
 import Features from "../components/Features";
-import Working from "../components/working";
+import Working from "../components/Working";
 import Response from "../components/Response";
 import Account from "../components/Account";
 import Aboutus from "../components/Aboutus";

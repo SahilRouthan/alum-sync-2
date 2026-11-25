@@ -10,6 +10,7 @@ import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import OAuthCallbackPage from "./pages/auth/OAuthCallbackPage";
+import ChatbotWidget from "./components/app/ChatbotWidget";
 
 import FeatureDashboardShell, { LegacyModuleFrame } from "./dashboard/components/FeatureDashboardShell";
 import DashboardHome from "./dashboard/pages/Home/Home";
@@ -146,6 +147,7 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <ChatbotWidget />
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

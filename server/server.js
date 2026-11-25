@@ -21,6 +21,7 @@ import eventsRoutes from "./routes/events.routes.js";
 import jobsRoutes from "./routes/jobs.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import chatbotRoutes from "./routes/chatbot.routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, ".env") });
@@ -131,6 +132,8 @@ app.use("/api/events", eventsRoutes);
 app.use("/api/jobs", jobsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/chatbot", chatbotRoutes);
+app.use("/api", chatbotRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

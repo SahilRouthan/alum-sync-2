@@ -1,0 +1,255 @@
+{
+  "intents": [
+    {
+      "tag": "greet",
+      "patterns": ["Hello", "Hi", "Hey", "START", "Good morning", "Good evening"],
+      "responses": [
+        "Hello! Welcome to AlumSync. I am ALMA, your virtual assistant. Please select an option from the Main Menu:"
+      ],
+      "options": [
+        "Introduction",
+        "Platform Navigation",
+        "Platform Guidance",
+        "Career & Skill Guidance",
+        "Career Preparation"
+      ]
+    },
+    {
+      "tag": "bot_introduction",
+      "patterns": ["Introduction", "Who are you?", "What is ALMA?", "About ALMA"],
+      "responses": [
+        "I am ALMA, the AlumSync virtual assistant. I help students, alumni, and administrators navigate the platform, explore career guidance, and connect with alumni resources."
+      ],
+      "options": ["Main Menu"]
+    },
+    {
+      "tag": "main_menu",
+      "patterns": ["Main Menu", "Back to Main Menu", "Menu", "Start over"],
+      "responses": ["Returning to the Main Menu. What would you like to explore?"],
+      "options": [
+        "Introduction",
+        "Platform Navigation",
+        "Platform Guidance",
+        "Career & Skill Guidance",
+        "Career Preparation"
+      ]
+    },
+    {
+      "tag": "Platform-Navigation",
+      "patterns": ["Platform Navigation", "Back to Platform Navigation", "navigate", "go to", "pages"],
+      "responses": ["Select a destination within the Platform Navigation sub-menu:"],
+      "options": [
+        "Home",
+        "Login",
+        "Register",
+        "Profile",
+        "Alumni Directory",
+        "Events",
+        "Jobs",
+        "Internships",
+        "Feed",
+        "Resume Analyzer",
+        "Support",
+        "Main Menu"
+      ]
+    },
+    {
+      "tag": "navigate_home",
+      "patterns": ["Home", "Home page", "Landing page"],
+      "responses": ["Redirecting you to the home page."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "/"
+    },
+    {
+      "tag": "navigate_login",
+      "patterns": ["Login", "Log in", "Sign in"],
+      "responses": ["Opening the login page."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "/login"
+    },
+    {
+      "tag": "navigate_register",
+      "patterns": ["Register", "Sign up", "Create account"],
+      "responses": ["Redirecting you to the registration page."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "/signup"
+    },
+    {
+      "tag": "navigate_profile",
+      "patterns": ["Profile", "My Profile"],
+      "responses": ["Opening your profile page."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "__ROLE__/profile"
+    },
+    {
+      "tag": "navigate_alumni_directory",
+      "patterns": ["Alumni Directory", "Network", "Find alumni", "Mentors"],
+      "responses": ["Opening the alumni directory."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "__ROLE__/network"
+    },
+    {
+      "tag": "navigate_events",
+      "patterns": ["Events", "Upcoming events", "Reunions"],
+      "responses": ["Here are the upcoming events."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "__ROLE__/events"
+    },
+    {
+      "tag": "navigate_jobs",
+      "patterns": ["Jobs", "Job board", "Job postings"],
+      "responses": ["Opening the job postings section."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "__ROLE__/jobs"
+    },
+    {
+      "tag": "navigate_internships",
+      "patterns": ["Internships", "Internship opportunities"],
+      "responses": ["Opening available job and internship opportunities."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "__ROLE__/jobs"
+    },
+    {
+      "tag": "navigate_feed",
+      "patterns": ["Feed", "Community", "Dashboard", "Home Feed"],
+      "responses": ["Opening your community dashboard feed."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "__ROLE__"
+    },
+    {
+      "tag": "navigate_resume",
+      "patterns": ["Resume Analyzer", "Analyze resume", "Upload resume", "Upload PDF"],
+      "responses": ["Opening the Smart Resume Analyzer."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "/student/resume"
+    },
+    {
+      "tag": "navigate_support",
+      "patterns": ["Support", "Help", "Contact support", "FAQ"],
+      "responses": ["Opening the Help & Support section. You can also reach us at support@alumsync.com."],
+      "options": ["Back to Platform Navigation", "Main Menu"],
+      "route": "/#support"
+    },
+    {
+      "tag": "Platform-Guidance",
+      "patterns": ["Platform Guidance", "Back to Platform Guidance", "How does it work", "Guide"],
+      "responses": ["Select a topic from the Platform Guidance sub-menu:"],
+      "options": ["Features Overview", "Post a Job", "Register for Event", "Edit Profile", "Main Menu"]
+    },
+    {
+      "tag": "platform_features_overview",
+      "patterns": ["Features Overview", "What features does AlumSync have?"],
+      "responses": [
+        "AlumSync provides alumni networking, mentorship matching, AI resume skill-gap analysis, job & internship referrals, community feeds, messaging, and university events."
+      ],
+      "options": ["Back to Platform Guidance", "Main Menu"]
+    },
+    {
+      "tag": "how_to_post_job",
+      "patterns": ["Post a Job", "How to post a job"],
+      "responses": [
+        "Alumni and administrators can navigate to Jobs & Internships in the dashboard to share job openings and referral links."
+      ],
+      "options": ["Back to Platform Guidance", "Main Menu"]
+    },
+    {
+      "tag": "how_to_register_event",
+      "patterns": ["Register for Event", "How to join an event"],
+      "responses": [
+        "Navigate to Events & Reunions in your dashboard sidebar, pick an upcoming event, and click Register."
+      ],
+      "options": ["Back to Platform Guidance", "Main Menu"]
+    },
+    {
+      "tag": "how_to_edit_profile",
+      "patterns": ["Edit Profile", "How to update profile", "Update skills"],
+      "responses": [
+        "Go to My Profile from the dashboard sidebar to update your skills, education, career interests, or alumni experience."
+      ],
+      "options": ["Back to Platform Guidance", "Main Menu"]
+    },
+    {
+      "tag": "Career-Skill-Guidance",
+      "patterns": ["Career & Skill Guidance", "Back to Career & Skill Guidance", "Career advice", "Skills"],
+      "responses": ["Select a resource from the Career & Skill Guidance sub-menu:"],
+      "options": [
+        "Recommend Skill Path",
+        "Learning Resources",
+        "Roadmap Summary",
+        "Project Ideas",
+        "Career Roles",
+        "Main Menu"
+      ]
+    },
+    {
+      "tag": "recommend_skill_path",
+      "patterns": ["Recommend Skill Path", "Which skills should I learn?"],
+      "responses": [
+        "Recommended paths include Full-Stack Web Development (React, Node.js, SQL), AI & Data Science (Python, ML, PyTorch), and Cloud & DevOps (Docker, AWS, Kubernetes)."
+      ],
+      "options": ["Back to Career & Skill Guidance", "Main Menu"]
+    },
+    {
+      "tag": "skill_learning_resources",
+      "patterns": ["Learning Resources", "Where to learn"],
+      "responses": [
+        "Great learning resources include Coursera, freeCodeCamp, MIT OpenCourseWare, official docs, and mentorship sessions with AlumSync alumni."
+      ],
+      "options": ["Back to Career & Skill Guidance", "Main Menu"]
+    },
+    {
+      "tag": "skill_roadmap_summary",
+      "patterns": ["Roadmap Summary", "Roadmap"],
+      "responses": [
+        "Strong roadmaps start with core computer science & language fundamentals, followed by 2–3 deployed end-to-end projects, resume analysis, and mock interviews with alumni mentors."
+      ],
+      "options": ["Back to Career & Skill Guidance", "Main Menu"]
+    },
+    {
+      "tag": "project_ideas_for_skill",
+      "patterns": ["Project Ideas", "What projects should I build?"],
+      "responses": [
+        "High-impact project ideas include full-stack SaaS apps, AI chatbots/RAG assistants, data analytics dashboards, and open-source developer tools."
+      ],
+      "options": ["Back to Career & Skill Guidance", "Main Menu"]
+    },
+    {
+      "tag": "career_roles_for_skill",
+      "patterns": ["Career Roles", "Job roles"],
+      "responses": [
+        "Top career tracks supported on AlumSync include Full-Stack Developer, Frontend Engineer, Backend Engineer, Data Scientist / ML Engineer, Cloud & DevOps Engineer, and Product Manager."
+      ],
+      "options": ["Back to Career & Skill Guidance", "Main Menu"]
+    },
+    {
+      "tag": "Career-Preparation",
+      "patterns": ["Career Preparation", "Back to Career Preparation", "Job preparation"],
+      "responses": ["Select a preparation tool from the Career Preparation sub-menu:"],
+      "options": ["Resume Help", "Interview Tips", "Main Menu"]
+    },
+    {
+      "tag": "resume_help",
+      "patterns": ["Resume Help", "How to improve my resume?"],
+      "responses": [
+        "Upload your PDF resume in the Smart Resume Analyzer to extract skills, check role-fit scores, uncover skill gaps against alumni benchmarks, and get tailored improvement tips."
+      ],
+      "options": ["Resume Analyzer", "Back to Career Preparation", "Main Menu"]
+    },
+    {
+      "tag": "interview_tips",
+      "patterns": ["Interview Tips", "How to prepare for interviews?"],
+      "responses": [
+        "Practice data structures & system design, quantify project outcomes using STAR stories, and book a 1-on-1 mentorship session with an alumnus in your target company."
+      ],
+      "options": ["Back to Career Preparation", "Main Menu"]
+    },
+    {
+      "tag": "fallback",
+      "patterns": [],
+      "responses": [
+        "I'm sorry, I didn't quite catch that. Please pick an option from the menu or contact support@alumsync.com."
+      ],
+      "options": ["Main Menu"]
+    }
+  ]
+}

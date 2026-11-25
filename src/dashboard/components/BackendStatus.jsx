@@ -35,7 +35,7 @@ function BackendStatus() {
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-[45] rounded-full border px-4 py-2 text-xs font-medium shadow-lg backdrop-blur-md ${styles[status]}`}
+      className={`fixed bottom-4 left-4 z-[45] rounded-full border px-4 py-2 text-xs font-medium shadow-lg backdrop-blur-md ${styles[status]}`}
       role="status"
       aria-live="polite"
     >

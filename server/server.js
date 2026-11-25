@@ -27,18 +27,24 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 const PORT = Number(process.env.PORT || 5001);
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+  process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : null,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : null,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174",
+].filter(Boolean);
 
+app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
-    origin: [
-      CLIENT_URL,
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:5174",
-      "http://127.0.0.1:5174",
-    ],
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -77,21 +83,25 @@ app.use("/api/admin", adminRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const server = app.listen(PORT, () => {
-  console.log(`AlumSync backend running on http://localhost:${PORT}`);
-  if (!isSupabaseConfigured) {
-    console.warn(
-      "[AlumSync] Supabase credentials not configured yet. Add SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY to .env"
-    );
-  }
-});
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, () => {
+    console.log(`AlumSync backend running on http://localhost:${PORT}`);
+    if (!isSupabaseConfigured) {
+      console.warn(
+        "[AlumSync] Supabase credentials not configured yet. Add SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY to .env"
+      );
+    }
+  });
 
-server.on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(
-      `[AlumSync] Port ${PORT} is already in use. Stop the process using port ${PORT} or set PORT=5001 in server/.env (and VITE_API_BASE_URL=http://localhost:5001/api in .env).`
-    );
-    process.exit(1);
-  }
-  throw err;
-});
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `[AlumSync] Port ${PORT} is already in use. Stop the process using port ${PORT} or set PORT=5001 in server/.env (and VITE_API_BASE_URL=/api in .env).`
+      );
+      process.exit(1);
+    }
+    throw err;
+  });
+}
+
+export default app;

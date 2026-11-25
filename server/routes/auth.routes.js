@@ -137,6 +137,27 @@ router.post("/login", requireSupabase, async (req, res, next) => {
   }
 });
 
+function resolveClientOrigin(req) {
+  if (process.env.CLIENT_URL) {
+    return process.env.CLIENT_URL.replace(/\/+$/, "");
+  }
+  const originHeader = req.get("origin");
+  if (originHeader) {
+    return originHeader.replace(/\/+$/, "");
+  }
+  const host = req.get("host");
+  if (host) {
+    return `${req.protocol}://${host}`;
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:5173";
+}
+
 router.post("/forgot-password", requireSupabase, async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
@@ -144,7 +165,7 @@ router.post("/forgot-password", requireSupabase, async (req, res, next) => {
       return res.status(400).json({ error: "Valid email is required." });
     }
 
-    const redirectTo = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password`;
+    const redirectTo = `${resolveClientOrigin(req)}/reset-password`;
     const { error } = await supabasePublic.auth.resetPasswordForEmail(email, { redirectTo });
     if (error) {
       return res.status(400).json({ error: error.message });

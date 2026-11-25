@@ -1,6 +1,6 @@
 import { supabase } from "./supabaseClient";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/+$/, "");
 
 async function getAccessToken() {
   if (supabase) {

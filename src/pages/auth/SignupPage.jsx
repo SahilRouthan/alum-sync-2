@@ -4,6 +4,7 @@ import { ArrowLeft, GraduationCap, Building2, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { roleHomePath } from "../../components/app/ProtectedRoute";
+import SocialAuthButtons from "../../components/app/SocialAuthButtons";
 import "../../styles/dashboard.css";
 
 export default function SignupPage() {
@@ -62,6 +63,10 @@ export default function SignupPage() {
               {error}
             </div>
           )}
+
+          <div className="mb-4">
+            <SocialAuthButtons role={form.role} onError={setError} dividerLabel="or sign up with email" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">

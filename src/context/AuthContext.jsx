@@ -117,6 +117,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     localStorage.removeItem("alumsync_access_token");
+    localStorage.removeItem("alumsync_pending_oauth_role");
     if (supabase) {
       await supabase.auth.signOut();
     }
@@ -124,6 +125,45 @@ export function AuthProvider({ children }) {
     setProfile(null);
     setRoleProfile(null);
   };
+
+  const loginWithOAuth = async (provider, { role } = {}) => {
+    if (!supabase) {
+      throw new Error("Supabase client is not configured for OAuth.");
+    }
+    if (role === "student" || role === "alumni") {
+      localStorage.setItem("alumsync_pending_oauth_role", role);
+    } else {
+      localStorage.removeItem("alumsync_pending_oauth_role");
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+  };
+
+  const syncOAuthProfile = useCallback(async () => {
+    if (!supabase) {
+      throw new Error("Supabase client is not configured.");
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData?.session;
+    if (!session?.access_token) {
+      throw new Error("No active OAuth session found.");
+    }
+    localStorage.setItem("alumsync_access_token", session.access_token);
+    const requestedRole = localStorage.getItem("alumsync_pending_oauth_role") || undefined;
+    localStorage.removeItem("alumsync_pending_oauth_role");
+
+    const data = await api.post("/auth/oauth-sync", { requestedRole });
+    setUser(session.user);
+    setProfile(data.profile || null);
+    setRoleProfile(data.roleProfile || null);
+    return data;
+  }, []);
 
   const forgotPassword = async (email) => {
     return api.post("/auth/forgot-password", { email });
@@ -149,6 +189,8 @@ export function AuthProvider({ children }) {
         login,
         signup,
         logout,
+        loginWithOAuth,
+        syncOAuthProfile,
         forgotPassword,
         resetPassword,
         refreshProfile: loadMe,

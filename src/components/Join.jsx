@@ -5,12 +5,13 @@ import { useToast } from "../context/ToastContext";
 import { roleHomePath } from "./app/ProtectedRoute";
 
 export default function Join () {
-    const { login, signup } = useAuth();
+    const { login, signup, loginWithOAuth } = useAuth();
     const { showToast } = useToast();
     const navigate = useNavigate();
 
     const [role, setRole] = useState("Student");
     const [activeTab, setActiveTab] = useState('login');
+    const [oauthLoading, setOauthLoading] = useState(null);
     function switchTab(tab) {
         setActiveTab(tab);
     }
@@ -60,6 +61,21 @@ const handleSignup = async () => {
   }
 };
 
+const handleOAuth = async (provider, isSignupTab = false) => {
+  setOauthLoading(provider);
+  try {
+    const selectedRole = isSignupTab
+      ? role.toLowerCase() === "alumni"
+        ? "alumni"
+        : "student"
+      : undefined;
+    await loginWithOAuth(provider, { role: selectedRole });
+  } catch (err) {
+    showToast(err.message || `Could not continue with ${provider}.`, "error");
+    setOauthLoading(null);
+  }
+};
+
     return (
         <section id="auth" className="join">
             <div className="join-blob"></div>
@@ -79,8 +95,12 @@ const handleSignup = async () => {
                     {activeTab === 'login' && (
                     <div className="join-form-visible" id="form-login">
                         <div className="social-btns">
-                            <button className="soc-btn">🔵 Google</button>
-                            <button className="soc-btn">⬛Github</button>
+                            <button type="button" className="soc-btn" disabled={Boolean(oauthLoading)} onClick={() => handleOAuth("google", false)}>
+                              {oauthLoading === "google" ? "Connecting..." : "🔵 Google"}
+                            </button>
+                            <button type="button" className="soc-btn" disabled={Boolean(oauthLoading)} onClick={() => handleOAuth("github", false)}>
+                              {oauthLoading === "github" ? "Connecting..." : "⬛Github"}
+                            </button>
                         </div>
                         <div className="divider-row">
                             <div className="div-line"></div>
@@ -110,8 +130,12 @@ const handleSignup = async () => {
                     {activeTab === "signup" && (
                     <div className="join-form-visible" id="form-signup">
                         <div className="social-btns">
-                            <button className="soc-btn">🔵 Google</button>
-                            <button className="soc-btn">⬛Github</button>
+                            <button type="button" className="soc-btn" disabled={Boolean(oauthLoading)} onClick={() => handleOAuth("google", true)}>
+                              {oauthLoading === "google" ? "Connecting..." : "🔵 Google"}
+                            </button>
+                            <button type="button" className="soc-btn" disabled={Boolean(oauthLoading)} onClick={() => handleOAuth("github", true)}>
+                              {oauthLoading === "github" ? "Connecting..." : "⬛Github"}
+                            </button>
                         </div>
                         <div className="divider-row">
                             <div className="div-line"></div>

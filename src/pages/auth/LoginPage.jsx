@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, Mail, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { roleHomePath } from "../../components/app/ProtectedRoute";
+import SocialAuthButtons from "../../components/app/SocialAuthButtons";
 import "../../styles/dashboard.css";
 
 export default function LoginPage() {
@@ -62,6 +63,10 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+
+          <div className="mb-4">
+            <SocialAuthButtons onError={setError} dividerLabel="or log in with email" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

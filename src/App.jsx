@@ -8,6 +8,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import OAuthCallbackPage from "./pages/auth/OAuthCallbackPage";
 
 import FeatureDashboardShell, { LegacyModuleFrame } from "./dashboard/components/FeatureDashboardShell";
 import DashboardHome from "./dashboard/pages/Home/Home";
@@ -64,6 +65,7 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
             {/* Student Portal (Feature Dashboard Integration) */}
             <Route path="/student" element={<RoleShell allowedRoles={["student"]} />}>

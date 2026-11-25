@@ -210,6 +210,203 @@ router.post("/forgot-password", requireSupabase, async (req, res, next) => {
   }
 });
 
+router.post("/oauth-sync", requireSupabase, async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+    if (!token) {
+      return res.status(401).json({ error: "Authorization token required." });
+    }
+
+    const { data: userRes, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userRes?.user) {
+      return res.status(401).json({ error: "Invalid or expired OAuth session." });
+    }
+
+    const authUser = userRes.user;
+    const email = normalizeEmail(authUser.email);
+    if (!email) {
+      return res.status(400).json({
+        error: "Your OAuth account did not provide an email address. Please ensure your email is verified/public.",
+      });
+    }
+
+    const meta = authUser.user_metadata || {};
+    const rawFullName = sanitizeText(
+      meta.full_name || meta.name || meta.user_name || meta.preferred_username || "",
+      120
+    );
+    const nameParts = rawFullName ? rawFullName.split(/\s+/).filter(Boolean) : [];
+    const firstName =
+      normalizePersonName(sanitizeText(meta.first_name || meta.given_name || nameParts[0] || "", 80)) ||
+      email.split("@")[0];
+    const lastName = normalizePersonName(
+      sanitizeText(meta.last_name || meta.family_name || nameParts.slice(1).join(" ") || "", 80)
+    );
+    const fullName = `${firstName} ${lastName}`.trim() || email.split("@")[0];
+    const avatarUrl = sanitizeText(meta.avatar_url || meta.picture || "", 500) || null;
+
+    const requestedRoleRaw = String(req.body?.requestedRole || "").trim().toLowerCase();
+    const safeRequestedRole = requestedRoleRaw === "alumni" ? "alumni" : "student";
+
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    let finalProfile = existingProfile;
+
+    if (!existingProfile) {
+      const { data: inserted, error: insertErr } = await supabaseAdmin
+        .from("profiles")
+        .upsert({
+          id: authUser.id,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          full_name: fullName,
+          role: safeRequestedRole,
+          avatar_url: avatarUrl,
+        })
+        .select("*")
+        .single();
+
+      if (insertErr) throw insertErr;
+      finalProfile = inserted;
+
+      if (safeRequestedRole === "student") {
+        await supabaseAdmin
+          .from("student_profiles")
+          .upsert({ user_id: authUser.id }, { onConflict: "user_id" });
+      } else {
+        const { data: linked } = await supabaseAdmin
+          .from("alumni_profiles")
+          .update({ user_id: authUser.id, full_name: fullName })
+          .ilike("email", email)
+          .is("user_id", null)
+          .select("id");
+
+        if (!linked || linked.length === 0) {
+          await supabaseAdmin
+            .from("alumni_profiles")
+            .upsert(
+              {
+                user_id: authUser.id,
+                email,
+                full_name: fullName,
+                avatar_url: avatarUrl,
+                is_verified: false,
+                verification_status: "pending",
+              },
+              { onConflict: "email" }
+            );
+        }
+      }
+    } else {
+      if (!existingProfile.is_active) {
+        return res.status(403).json({ error: "This account has been deactivated." });
+      }
+
+      const updates = {};
+      const emailPrefix = email.split("@")[0];
+      if ((!existingProfile.full_name || existingProfile.full_name === emailPrefix) && fullName !== emailPrefix) {
+        updates.first_name = firstName;
+        updates.last_name = lastName;
+        updates.full_name = fullName;
+      }
+      if (!existingProfile.avatar_url && avatarUrl) {
+        updates.avatar_url = avatarUrl;
+      }
+
+      // If handle_new_user() trigger just provisioned a brand-new OAuth signup as 'student'
+      // but the user selected 'alumni' on the signup form, switch the fresh empty profile once.
+      const isBrandNew =
+        existingProfile.created_at &&
+        Date.now() - new Date(existingProfile.created_at).getTime() < 2 * 60 * 1000;
+
+      if (isBrandNew && existingProfile.role === "student" && safeRequestedRole === "alumni") {
+        const { data: sp } = await supabaseAdmin
+          .from("student_profiles")
+          .select("id, roll_number, degree, department, graduation_year")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+
+        const isEmptyStudent =
+          !sp || (!sp.roll_number && !sp.degree && !sp.department && !sp.graduation_year);
+
+        if (isEmptyStudent) {
+          updates.role = "alumni";
+          if (sp?.id) {
+            await supabaseAdmin.from("student_profiles").delete().eq("id", sp.id);
+          }
+          const { data: linked } = await supabaseAdmin
+            .from("alumni_profiles")
+            .update({ user_id: authUser.id, full_name: fullName })
+            .ilike("email", email)
+            .is("user_id", null)
+            .select("id");
+
+          if (!linked || linked.length === 0) {
+            await supabaseAdmin
+              .from("alumni_profiles")
+              .upsert(
+                {
+                  user_id: authUser.id,
+                  email,
+                  full_name: fullName,
+                  avatar_url: avatarUrl,
+                  is_verified: false,
+                  verification_status: "pending",
+                },
+                { onConflict: "email" }
+              );
+          }
+        }
+      }
+
+      if (Object.keys(updates).length > 0) {
+        const { data: updated, error: updateErr } = await supabaseAdmin
+          .from("profiles")
+          .update(updates)
+          .eq("id", authUser.id)
+          .select("*")
+          .single();
+        if (updateErr) throw updateErr;
+        finalProfile = updated;
+      }
+    }
+
+    let roleProfile = null;
+    if (finalProfile.role === "student") {
+      const { data } = await supabaseAdmin
+        .from("student_profiles")
+        .select("*")
+        .eq("user_id", finalProfile.id)
+        .maybeSingle();
+      roleProfile = data;
+    } else if (finalProfile.role === "alumni") {
+      const { data } = await supabaseAdmin
+        .from("alumni_profiles")
+        .select("*")
+        .eq("user_id", finalProfile.id)
+        .maybeSingle();
+      roleProfile = data;
+    } else if (finalProfile.role === "admin") {
+      const { data } = await supabaseAdmin
+        .from("admin_profiles")
+        .select("*")
+        .eq("user_id", finalProfile.id)
+        .maybeSingle();
+      roleProfile = data;
+    }
+
+    return res.json({ profile: finalProfile, roleProfile });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 router.get("/me", requireAuth, async (req, res, next) => {
   try {
     const { profile } = req;

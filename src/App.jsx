@@ -1,8 +1,7 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
-import ProtectedRoute from "./components/app/ProtectedRoute";
-import DashboardLayout from "./layouts/DashboardLayout";
+import ProtectedRoute, { roleHomePath } from "./components/app/ProtectedRoute";
 
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -10,14 +9,18 @@ import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
-import StudentDashboard from "./pages/student/StudentDashboard";
+import FeatureDashboardShell, { LegacyModuleFrame } from "./dashboard/components/FeatureDashboardShell";
+import DashboardHome from "./dashboard/pages/Home/Home";
+import DashboardNetwork from "./dashboard/pages/Network/Network";
+import DashboardJobs from "./dashboard/pages/Jobs/Jobs";
+import DashboardMentor from "./dashboard/pages/Mentor/Mentor";
+import DashboardAlerts from "./dashboard/pages/Alerts/Alerts";
+
 import StudentProfilePage from "./pages/student/StudentProfilePage";
 import ResumeAnalyzerPage from "./pages/student/ResumeAnalyzerPage";
 import RecommendationsPage from "./pages/student/RecommendationsPage";
-import AlumniDirectoryPage from "./pages/student/AlumniDirectoryPage";
 import StudentMentorshipPage from "./pages/student/StudentMentorshipPage";
 
-import AlumniDashboard from "./pages/alumni/AlumniDashboard";
 import AlumniProfilePage from "./pages/alumni/AlumniProfilePage";
 import AlumniMentorshipPage from "./pages/alumni/AlumniMentorshipPage";
 
@@ -27,19 +30,24 @@ import AdminStudentsPage from "./pages/admin/AdminStudentsPage";
 import AdminCsvImportPage from "./pages/admin/AdminCsvImportPage";
 import AdminModerationPage from "./pages/admin/AdminModerationPage";
 
-import CommunityPage from "./pages/shared/CommunityPage";
 import EventsPage from "./pages/shared/EventsPage";
-import JobsPage from "./pages/shared/JobsPage";
 import MessagesPage from "./pages/shared/MessagesPage";
 
 function RoleShell({ allowedRoles }) {
   return (
     <ProtectedRoute allowedRoles={allowedRoles}>
-      <DashboardLayout>
+      <FeatureDashboardShell>
         <Outlet />
-      </DashboardLayout>
+      </FeatureDashboardShell>
     </ProtectedRoute>
   );
+}
+
+function RoleRedirect({ suffix = "" }) {
+  const { isAuthenticated, profile, loading } = useAuth();
+  if (loading) return null;
+  if (!isAuthenticated || !profile) return <Navigate to="/login" replace />;
+  return <Navigate to={`${roleHomePath(profile.role)}${suffix}`} replace />;
 }
 
 function App() {
@@ -57,40 +65,60 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Student Dashboard & Modules */}
+            {/* Student Portal (Feature Dashboard Integration) */}
             <Route path="/student" element={<RoleShell allowedRoles={["student"]} />}>
-              <Route index element={<StudentDashboard />} />
-              <Route path="profile" element={<StudentProfilePage />} />
-              <Route path="resume" element={<ResumeAnalyzerPage />} />
-              <Route path="recommendations" element={<RecommendationsPage />} />
-              <Route path="alumni" element={<AlumniDirectoryPage />} />
-              <Route path="mentorship" element={<StudentMentorshipPage />} />
-              <Route path="messages" element={<MessagesPage />} />
-              <Route path="jobs" element={<JobsPage />} />
-              <Route path="community" element={<CommunityPage />} />
-              <Route path="events" element={<EventsPage />} />
+              <Route index element={<DashboardHome />} />
+              <Route path="network" element={<DashboardNetwork />} />
+              <Route path="alumni" element={<DashboardNetwork />} />
+              <Route path="jobs" element={<DashboardJobs />} />
+              <Route path="mentor" element={<DashboardMentor />} />
+              <Route path="mentorship" element={<LegacyModuleFrame><StudentMentorshipPage /></LegacyModuleFrame>} />
+              <Route path="alerts" element={<DashboardAlerts />} />
+              <Route path="profile" element={<LegacyModuleFrame><StudentProfilePage /></LegacyModuleFrame>} />
+              <Route path="resume" element={<LegacyModuleFrame><ResumeAnalyzerPage /></LegacyModuleFrame>} />
+              <Route path="recommendations" element={<LegacyModuleFrame><RecommendationsPage /></LegacyModuleFrame>} />
+              <Route path="messages" element={<LegacyModuleFrame><MessagesPage /></LegacyModuleFrame>} />
+              <Route path="community" element={<DashboardHome />} />
+              <Route path="events" element={<LegacyModuleFrame><EventsPage /></LegacyModuleFrame>} />
             </Route>
 
-            {/* Alumni Dashboard & Modules */}
+            {/* Alumni Portal (Feature Dashboard Integration) */}
             <Route path="/alumni" element={<RoleShell allowedRoles={["alumni"]} />}>
-              <Route index element={<AlumniDashboard />} />
-              <Route path="profile" element={<AlumniProfilePage />} />
-              <Route path="mentorship" element={<AlumniMentorshipPage />} />
-              <Route path="messages" element={<MessagesPage />} />
-              <Route path="jobs" element={<JobsPage />} />
-              <Route path="community" element={<CommunityPage />} />
-              <Route path="events" element={<EventsPage />} />
+              <Route index element={<DashboardHome />} />
+              <Route path="network" element={<DashboardNetwork />} />
+              <Route path="jobs" element={<DashboardJobs />} />
+              <Route path="mentor" element={<DashboardMentor />} />
+              <Route path="mentorship" element={<LegacyModuleFrame><AlumniMentorshipPage /></LegacyModuleFrame>} />
+              <Route path="alerts" element={<DashboardAlerts />} />
+              <Route path="profile" element={<LegacyModuleFrame><AlumniProfilePage /></LegacyModuleFrame>} />
+              <Route path="messages" element={<LegacyModuleFrame><MessagesPage /></LegacyModuleFrame>} />
+              <Route path="community" element={<DashboardHome />} />
+              <Route path="events" element={<LegacyModuleFrame><EventsPage /></LegacyModuleFrame>} />
             </Route>
 
-            {/* Administrator Dashboard & Modules */}
+            {/* Administrator Portal (Feature Dashboard Integration) */}
             <Route path="/admin" element={<RoleShell allowedRoles={["admin"]} />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="alumni" element={<AdminAlumniPage />} />
-              <Route path="students" element={<AdminStudentsPage />} />
-              <Route path="import" element={<AdminCsvImportPage />} />
-              <Route path="moderation" element={<AdminModerationPage />} />
-              <Route path="events" element={<EventsPage />} />
+              <Route index element={<DashboardHome />} />
+              <Route path="network" element={<DashboardNetwork />} />
+              <Route path="jobs" element={<DashboardJobs />} />
+              <Route path="mentor" element={<DashboardMentor />} />
+              <Route path="alerts" element={<DashboardAlerts />} />
+              <Route path="profile" element={<LegacyModuleFrame><AdminDashboard /></LegacyModuleFrame>} />
+              <Route path="overview" element={<LegacyModuleFrame><AdminDashboard /></LegacyModuleFrame>} />
+              <Route path="alumni" element={<LegacyModuleFrame><AdminAlumniPage /></LegacyModuleFrame>} />
+              <Route path="students" element={<LegacyModuleFrame><AdminStudentsPage /></LegacyModuleFrame>} />
+              <Route path="import" element={<LegacyModuleFrame><AdminCsvImportPage /></LegacyModuleFrame>} />
+              <Route path="moderation" element={<LegacyModuleFrame><AdminModerationPage /></LegacyModuleFrame>} />
+              <Route path="messages" element={<LegacyModuleFrame><MessagesPage /></LegacyModuleFrame>} />
+              <Route path="events" element={<LegacyModuleFrame><EventsPage /></LegacyModuleFrame>} />
             </Route>
+
+            {/* Direct dashboard route aliases redirect to the logged-in role's portal */}
+            <Route path="/dashboard" element={<RoleRedirect />} />
+            <Route path="/network" element={<RoleRedirect suffix="/network" />} />
+            <Route path="/jobs" element={<RoleRedirect suffix="/jobs" />} />
+            <Route path="/mentor" element={<RoleRedirect suffix="/mentor" />} />
+            <Route path="/alerts" element={<RoleRedirect suffix="/alerts" />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

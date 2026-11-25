@@ -6,7 +6,8 @@ import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { isSupabaseConfigured } from "./config/supabase.js";
+import { isSupabaseConfigured, supabaseAdmin } from "./config/supabase.js";
+import { getSkillsMap } from "./services/skillSyncService.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 import authRoutes from "./routes/auth.routes.js";
@@ -66,6 +67,57 @@ app.get("/api/health", (_req, res) => {
     supabaseConfigured: isSupabaseConfigured,
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get("/api/v1/health", (_req, res) => {
+  res.json({
+    success: true,
+    status: "ok",
+    service: "AlumSync API",
+    supabaseConfigured: isSupabaseConfigured,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/api/v1/alumni", async (_req, res, next) => {
+  try {
+    if (!isSupabaseConfigured || !supabaseAdmin) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Check dedicated `alumni` table first (Feature-dashboard-integration schema),
+    // then fall back to `alumni_profiles` (core AlumSync schema).
+    const { data: legacyRows, error: legacyErr } = await supabaseAdmin
+      .from("alumni")
+      .select("*");
+
+    if (!legacyErr && Array.isArray(legacyRows)) {
+      return res.json({ success: true, data: legacyRows });
+    }
+
+    const { data: profileRows, error: profileErr } = await supabaseAdmin
+      .from("alumni_profiles")
+      .select("*")
+      .eq("is_verified", true)
+      .order("updated_at", { ascending: false });
+
+    if (profileErr) throw profileErr;
+
+    const alumniIds = (profileRows || []).map((r) => r.id);
+    const { byAlumni } = await getSkillsMap({ alumniProfileIds: alumniIds });
+
+    const data = (profileRows || []).map((row) => ({
+      ...row,
+      name: row.full_name,
+      role: [row.job_title, row.company].filter(Boolean).join(" @ ") || "Verified Alumnus",
+      batch: row.graduation_year ? `Class of '${String(row.graduation_year).slice(-2)}` : "",
+      tags: (byAlumni.get(row.id) || []).map((s) => s.name),
+    }));
+
+    return res.json({ success: true, data });
+  } catch (err) {
+    return next(err);
+  }
 });
 
 app.use("/api/auth", authRoutes);

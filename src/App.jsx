@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute, { roleHomePath } from "./components/app/ProtectedRoute";
@@ -51,11 +52,32 @@ function RoleRedirect({ suffix = "" }) {
   return <Navigate to={`${roleHomePath(profile.role)}${suffix}`} replace />;
 }
 
+function AuthHashRedirector() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname !== "/") return;
+    const hash = window.location.hash || "";
+    const search = window.location.search || "";
+    if (hash.includes("type=recovery")) {
+      navigate(`/reset-password${hash}`, { replace: true });
+      return;
+    }
+    if (hash.includes("access_token=") || search.includes("code=")) {
+      navigate(`/auth/callback${search}${hash}`, { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
         <AuthProvider>
+          <AuthHashRedirector />
           <Routes>
             {/* Existing Landing Page preserved untouched at root */}
             <Route path="/" element={<LandingPage />} />
